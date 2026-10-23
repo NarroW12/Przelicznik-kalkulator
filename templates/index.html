@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Przelicznik: pieniądze → czas pracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 → ⏱️</h1>
+            <p class="subtitle">Sprawdź ile czasu musisz pracować, żeby kupić to, co chcesz</p>
+        </header>
+
+        <!-- Sekcja zarobków (wspólna dla obu trybów) -->
+        <section class="card">
+            <h2 class="section-title">Twoje zarobki</h2>
+
+            <div class="field">
+                <label for="form">Forma zatrudnienia</label>
+                <select id="form" name="form">
+                    <option value="uop">Umowa o pracę (UoP)</option>
+                    <option value="b2b_liniowy">B2B — podatek liniowy 19%</option>
+                    <option value="b2b_ryczalt">B2B — ryczałt</option>
+                    <option value="b2b_skala">B2B — skala 12% / 32%</option>
+                </select>
+            </div>
+
+            <div id="ryczalt-rate-field" class="field hidden">
+                <label for="ryczalt_rate">Stawka ryczałtu</label>
+                <select id="ryczalt_rate">
+                    <option value="8.5">8,5% (m.in. usługi nieujęte w innych progach)</option>
+                    <option value="12" selected>12% (IT — programowanie)</option>
+                    <option value="14">14% (m.in. usługi medyczne, inżynierskie)</option>
+                    <option value="15">15% (m.in. doradztwo, reklama)</option>
+                </select>
+            </div>
+
+            <div id="zus-variant-field" class="field hidden">
+                <label for="zus_variant">Wariant ZUS</label>
+                <select id="zus_variant">
+                    <option value="ulga">Ulga na start (0 zł ZUS, pierwsze 6 m-cy)</option>
+                    <option value="preferencyjny">Preferencyjny / Mały ZUS (~442 zł)</option>
+                    <option value="pelny" selected>Pełny ZUS (~1646 zł)</option>
+                </select>
+                <small class="hint">Wartości orientacyjne na 2025. Bez chorobowego.</small>
+            </div>
+
+            <div class="field">
+                <label>Sposób wprowadzania zarobków</label>
+                <div class="radio-group">
+                    <label class="radio">
+                        <input type="radio" name="mode" value="hourly" checked>
+                        <span>Stawka godzinowa</span>
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="mode" value="monthly">
+                        <span>Miesięcznie</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="hourly-fields" class="field-group">
+                <div class="field">
+                    <label for="hourly_rate">Stawka (zł/h)</label>
+                    <input type="number" id="hourly_rate" step="0.01" min="0" placeholder="np. 50">
+                </div>
+            </div>
+
+            <div id="monthly-fields" class="field-group hidden">
+                <div class="field">
+                    <label for="monthly_salary">Pensja / przychód miesięczny (zł)</label>
+                    <input type="number" id="monthly_salary" step="0.01" min="0" placeholder="np. 8000">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="hours_per_month">Godziny pracy w miesiącu</label>
+                <input type="number" id="hours_per_month" step="1" min="1" value="168">
+                <small class="hint">Domyślnie 168 h (21 dni × 8 h). Zmień jeśli pracujesz mniej/więcej.</small>
+            </div>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" id="is_brutto">
+                    <span>Podana kwota jest <strong>brutto</strong> (przelicz na netto)</span>
+                </label>
+            </div>
+
+            <div class="field">
+                <label for="vacation_days">Dni urlopu / wolnych w roku (poza świętami)</label>
+                <input type="number" id="vacation_days" step="1" min="0" max="100" value="26">
+                <small class="hint">Wpływa na obliczenia w latach pracy i procent roku.</small>
+            </div>
+        </section>
+
+        <!-- Zakładki trybu -->
+        <div class="tabs">
+            <button class="tab active" data-tab="forward">💰 → ⏱️ Ile czasu na produkt?</button>
+            <button class="tab" data-tab="reverse">⏱️ → 💰 Ile zarobię w czasie X?</button>
+            <button class="tab" data-tab="wishlist">🛒 Lista zakupów</button>
+            <button class="tab" data-tab="history">📜 Historia</button>
+        </div>
+
+        <!-- Tryb FORWARD: kwota → czas -->
+        <section id="tab-forward" class="tab-content card">
+            <h2 class="section-title">Cena produktu</h2>
+            <div class="field-row">
+                <div class="field grow">
+                    <label for="product_name">Nazwa (opcjonalnie)</label>
+                    <input type="text" id="product_name" placeholder="np. iPhone 15">
+                </div>
+                <div class="field">
+                    <label for="price">Cena (zł)</label>
+                    <input type="number" id="price" step="0.01" min="0" placeholder="np. 1300">
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-calc" class="btn-primary">Oblicz czas pracy</button>
+                <button id="btn-add-wishlist" class="btn-secondary">+ Dodaj do listy zakupów</button>
+            </div>
+
+            <div id="result" class="result hidden">
+                <div class="big-result" id="big-result"></div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Godziny</div>
+                        <div class="stat-value" id="total-hours"></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Dni roboczych</div>
+                        <div class="stat-value" id="total-days"></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Tygodni</div>
+                        <div class="stat-value" id="total-weeks"></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Miesięcy</div>
+                        <div class="stat-value" id="total-months"></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Lat pracy</div>
+                        <div class="stat-value" id="total-years"></div>
+                    </div>
+                </div>
+
+                <div class="percent-box" id="percent-box"></div>
+
+                <div class="meta" id="meta-box"></div>
+            </div>
+        </section>
+
+        <!-- Tryb REVERSE: czas → kwota -->
+        <section id="tab-reverse" class="tab-content card hidden">
+            <h2 class="section-title">Ile zarobię w czasie X?</h2>
+            <div class="field-row">
+                <div class="field">
+                    <label for="rev_amount">Ilość</label>
+                    <input type="number" id="rev_amount" step="0.5" min="0" placeholder="np. 8" value="8">
+                </div>
+                <div class="field grow">
+                    <label for="rev_unit">Jednostka</label>
+                    <select id="rev_unit">
+                        <option value="hours">godzin</option>
+                        <option value="days" selected>dni roboczych (8 h)</option>
+                        <option value="weeks">tygodni (40 h)</option>
+                        <option value="months">miesięcy (168 h)</option>
+                        <option value="years">lat (2016 h)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="btn-reverse" class="btn-primary">Oblicz zarobki</button>
+
+            <div id="reverse-result" class="result hidden">
+                <div class="big-result" id="reverse-big-result"></div>
+                <div class="meta" id="reverse-meta"></div>
+            </div>
+        </section>
+
+        <!-- Wishlist -->
+        <section id="tab-wishlist" class="tab-content card hidden">
+            <h2 class="section-title">Lista zakupów</h2>
+            <p class="muted">Dodawaj produkty z zakładki <em>„Ile czasu na produkt?”</em>. Łączny czas zostanie przeliczony.</p>
+
+            <div id="wishlist-empty" class="empty-state">Lista jest pusta. Dodaj pierwszy produkt!</div>
+
+            <table id="wishlist-table" class="data-table hidden">
+                <thead>
+                    <tr>
+                        <th>Produkt</th>
+                        <th>Cena</th>
+                        <th>Czas pracy</th>
+                        <th>% roku</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="wishlist-body"></tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>RAZEM</strong></td>
+                        <td id="wishlist-total-price"></td>
+                        <td id="wishlist-total-time"></td>
+                        <td id="wishlist-total-percent"></td>
+                        <td><button id="btn-clear-wishlist" class="btn-link-danger">Wyczyść</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
+        <!-- Historia -->
+        <section id="tab-history" class="tab-content card hidden">
+            <h2 class="section-title">Historia obliczeń</h2>
+            <p class="muted">Ostatnie 20 obliczeń. Zapisywane lokalnie w przeglądarce.</p>
+
+            <div id="history-empty" class="empty-state">Brak historii.</div>
+
+            <table id="history-table" class="data-table hidden">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Produkt</th>
+                        <th>Cena</th>
+                        <th>Czas pracy</th>
+                        <th>Forma</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5"></td>
+                        <td><button id="btn-clear-history" class="btn-link-danger">Wyczyść</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
+        <div id="error" class="card error hidden"></div>
+
+        <footer class="footer">
+            <small>
+                Wyliczenia podatkowe są uproszczone (ZUS 2025, PIT 2025/2026, podstawowe KUP, brak ulg, dochodu z innych źródeł itp.).<br>
+                Dla dokładnych wyliczeń skorzystaj z oficjalnego kalkulatora.
+            </small>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

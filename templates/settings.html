@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% set needs_chartjs = True %}
+{% block title %}Profil zarobków — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Profil zarobków</h1>
+    <p>Konfiguracja używana na wszystkich podstronach</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Lista profili -->
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📁 Twoje profile</h2>
+            <div class="card-subtitle">Możesz zapisać kilka i szybko między nimi przełączać</div>
+        </div>
+        <button id="btn-new-profile" class="btn btn-primary">+ Nowy profil</button>
+    </div>
+    <div id="profiles-list"></div>
+</section>
+
+<!-- Formularz edycji profilu -->
+<section class="card" id="profile-form-section">
+    <div class="card-header">
+        <h2 class="card-title">✏️ Edycja profilu</h2>
+    </div>
+
+    <div class="field">
+        <label for="profile_name">Nazwa profilu</label>
+        <input type="text" id="profile_name" placeholder="np. Praca etatowa">
+    </div>
+
+    <div class="field">
+        <label for="form">Forma zatrudnienia</label>
+        <select id="form">
+            <option value="uop">Umowa o pracę (UoP)</option>
+            <option value="uz">Umowa zlecenie (UZ)</option>
+            <option value="b2b_liniowy">B2B — podatek liniowy 19%</option>
+            <option value="b2b_ryczalt">B2B — ryczałt</option>
+            <option value="b2b_skala">B2B — skala 12% / 32%</option>
+        </select>
+    </div>
+
+    <div id="uz-options" class="hidden">
+        <div class="field">
+            <label class="checkbox">
+                <input type="checkbox" id="uz_student">
+                <span>Jestem <strong>studentem ≤ 26 lat</strong> (ulga dla młodych, brak ZUS)</span>
+            </label>
+        </div>
+        <div class="field">
+            <label class="checkbox">
+                <input type="checkbox" id="uz_chorobowe" checked>
+                <span>Dobrowolne chorobowe (+2,45%)</span>
+            </label>
+        </div>
+    </div>
+
+    <div id="ryczalt-rate-field" class="field hidden">
+        <label for="ryczalt_rate">Stawka ryczałtu</label>
+        <select id="ryczalt_rate">
+            <option value="8.5">8,5% (m.in. usługi nieujęte gdzie indziej)</option>
+            <option value="12" selected>12% (IT — programowanie)</option>
+            <option value="14">14% (medyczne, inżynierskie)</option>
+            <option value="15">15% (doradztwo, reklama)</option>
+        </select>
+    </div>
+
+    <div id="zus-variant-field" class="field hidden">
+        <label for="zus_variant">Wariant ZUS</label>
+        <select id="zus_variant">
+            <option value="ulga">Ulga na start (0 zł — pierwsze 6 m-cy)</option>
+            <option value="preferencyjny">Preferencyjny / Mały ZUS (~442 zł)</option>
+            <option value="pelny" selected>Pełny ZUS (~1646 zł)</option>
+        </select>
+        <span class="hint">Wartości orientacyjne 2025, bez chorobowego.</span>
+    </div>
+
+    <div class="field">
+        <label>Sposób wprowadzania zarobków</label>
+        <div class="radio-group">
+            <label class="radio"><input type="radio" name="mode" value="hourly" checked><span>Stawka godzinowa</span></label>
+            <label class="radio"><input type="radio" name="mode" value="monthly"><span>Miesięcznie</span></label>
+        </div>
+    </div>
+
+    <div id="hourly-fields">
+        <div class="field">
+            <label for="hourly_rate">Stawka (zł/h)</label>
+            <input type="number" id="hourly_rate" step="0.01" min="0" placeholder="50">
+        </div>
+    </div>
+
+    <div id="monthly-fields" class="hidden">
+        <div class="field">
+            <label for="monthly_salary">Pensja / przychód miesięczny (zł)</label>
+            <input type="number" id="monthly_salary" step="0.01" min="0" placeholder="8000">
+        </div>
+    </div>
+
+    <div class="field-row">
+        <div class="field grow">
+            <label for="hours_per_month">Godziny pracy w miesiącu</label>
+            <input type="number" id="hours_per_month" step="1" min="1" value="168">
+        </div>
+        <div class="field grow">
+            <label for="vacation_days">Dni urlopu / wolnych w roku</label>
+            <input type="number" id="vacation_days" step="1" min="0" max="100" value="26">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="checkbox">
+            <input type="checkbox" id="is_brutto">
+            <span>Podana kwota jest <strong>brutto</strong> (przelicz na netto)</span>
+        </label>
+    </div>
+
+    <div class="actions">
+        <button id="btn-save-profile" class="btn btn-primary">💾 Zapisz profil</button>
+        <button id="btn-preview" class="btn btn-soft">🔍 Podgląd</button>
+        <button id="btn-cancel" class="btn btn-secondary">Anuluj</button>
+    </div>
+</section>
+
+<!-- Podgląd: meta + wykres -->
+<section class="card hidden" id="preview-section">
+    <div class="card-header">
+        <h2 class="card-title">🧾 Podgląd wyliczenia</h2>
+    </div>
+
+    <div class="field-row">
+        <div style="flex: 1 1 280px;">
+            <div class="meta" id="preview-meta"></div>
+        </div>
+        <div style="flex: 1 1 280px;">
+            <div class="chart-wrap">
+                <canvas id="salary-chart"></canvas>
+            </div>
+            <div class="chart-legend" id="salary-chart-legend"></div>
+        </div>
+    </div>
+</section>
+
+<!-- What-if: symulacja podwyżki -->
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">📈 Symulacja podwyżki</h2>
+        <div class="card-subtitle">Co jeśli zarobki +/- X% — opiera się na aktywnym profilu</div>
+    </div>
+
+    <div class="field-row">
+        <div class="field">
+            <label for="whatif_pct">Zmiana zarobków (%)</label>
+            <input type="number" id="whatif_pct" value="20" step="1">
+        </div>
+        <div class="field" style="align-self: flex-end;">
+            <button id="btn-whatif" class="btn btn-primary">Policz</button>
+        </div>
+    </div>
+
+    <div id="whatif-result" class="whatif-result hidden"></div>
+</section>
+
+<!-- Backup -->
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">💾 Kopia zapasowa</h2>
+        <div class="card-subtitle">Eksport / import wszystkich danych (profile, lista, cele, historia)</div>
+    </div>
+    <div class="actions">
+        <button id="btn-export" class="btn btn-secondary">⬇ Eksportuj do JSON</button>
+        <label class="btn btn-secondary" for="import-file">⬆ Importuj z JSON</label>
+        <input type="file" id="import-file" accept="application/json" style="display:none;">
+        <button id="btn-reset-all" class="btn btn-danger">🗑️ Reset wszystkich danych</button>
+    </div>
+</section>
+{% endblock %}

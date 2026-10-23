@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Katalog typowych produktów — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Katalog typowych produktów</h1>
+    <p>Ile czasu pracujesz na codzienne wydatki?</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">📚 Wybrane produkty (Polska 2026)</h2>
+    </div>
+    <p class="muted">Kliknij produkt, by dodać go do <a href="{{ url_for('page_wishlist') }}">listy zakupów</a>.
+        Ceny orientacyjne — możesz edytować w kalkulatorze.</p>
+
+    <div class="inline-tabs" id="catalog-tabs">
+        <button class="inline-tab active" data-category="all">Wszystkie</button>
+        <button class="inline-tab" data-category="codzienne">Codzienne</button>
+        <button class="inline-tab" data-category="rozrywka">Rozrywka</button>
+        <button class="inline-tab" data-category="elektronika">Elektronika</button>
+        <button class="inline-tab" data-category="duze">Duże zakupy</button>
+    </div>
+
+    <div id="catalog-grid" class="catalog-grid"></div>
+</section>
+{% endblock %}

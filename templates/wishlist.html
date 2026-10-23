@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Lista zakupów — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Lista zakupów</h1>
+    <p>Łączny czas pracy na wszystkie wymarzone rzeczy</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">🛒 Twoje produkty</h2>
+        <button id="btn-clear-wishlist" class="btn btn-danger hidden">Wyczyść listę</button>
+    </div>
+
+    <p class="muted">Produkty dodajesz z zakładki <a href="{{ url_for('page_calculator') }}">Kalkulator</a> lub <a href="{{ url_for('page_reference') }}">Katalog typowych produktów</a>.</p>
+
+    <div id="wishlist-empty" class="empty-state">
+        <div class="empty-icon">🛒</div>
+        <div>Lista jest pusta</div>
+    </div>
+
+    <div class="table-wrap">
+        <table id="wishlist-table" class="data-table hidden">
+            <thead>
+                <tr>
+                    <th>Produkt</th>
+                    <th>Cena</th>
+                    <th>Czas pracy</th>
+                    <th>% roku</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="wishlist-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>RAZEM</strong></td>
+                    <td id="wishlist-total-price"></td>
+                    <td id="wishlist-total-time"></td>
+                    <td id="wishlist-total-percent"></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</section>
+{% endblock %}

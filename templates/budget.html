@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% set needs_chartjs = True %}
+{% block title %}Budżet miesięczny — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Budżet miesięczny</h1>
+    <p>Wydatki, oszczędności i czas pracy na rzeczy codzienne</p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+<!-- Nawigator miesiąca -->
+<section class="card month-nav-card">
+    <div class="month-nav">
+        <button id="btn-prev-month" class="btn btn-secondary btn-icon-only" aria-label="Poprzedni miesiąc">‹</button>
+        <div class="month-display">
+            <span id="current-month-label"></span>
+            <small id="current-month-meta"></small>
+        </div>
+        <button id="btn-next-month" class="btn btn-secondary btn-icon-only" aria-label="Następny miesiąc">›</button>
+        <button id="btn-today" class="btn btn-soft">Dziś</button>
+    </div>
+</section>
+
+<!-- Podsumowanie - 4 kafelki -->
+<section class="budget-summary-grid">
+    <div class="summary-tile income">
+        <div class="summary-label">Dochód netto</div>
+        <div class="summary-value" id="sum-income">— zł</div>
+        <div class="summary-foot" id="sum-income-foot"></div>
+    </div>
+    <div class="summary-tile expenses">
+        <div class="summary-label">Wydatki łącznie</div>
+        <div class="summary-value" id="sum-expenses">— zł</div>
+        <div class="summary-foot" id="sum-expenses-foot"></div>
+    </div>
+    <div class="summary-tile savings">
+        <div class="summary-label">Oszczędności</div>
+        <div class="summary-value" id="sum-savings">— zł</div>
+        <div class="summary-foot" id="sum-savings-foot"></div>
+    </div>
+    <div class="summary-tile time">
+        <div class="summary-label">Czas pracy na wydatki</div>
+        <div class="summary-value" id="sum-time">— h</div>
+        <div class="summary-foot" id="sum-time-foot"></div>
+    </div>
+</section>
+
+<!-- Reguła 50/30/20 -->
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📊 Reguła 50 / 30 / 20</h2>
+            <div class="card-subtitle">50% potrzeby (stałe) · 30% zachcianki (zmienne) · 20% oszczędności</div>
+        </div>
+    </div>
+    <div id="rule-bars"></div>
+</section>
+
+<!-- Tryb: szacunki / transakcje -->
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">💰 Wydatki w tym miesiącu</h2>
+    </div>
+
+    <div class="inline-tabs" id="mode-tabs">
+        <button class="inline-tab active" data-mode="estimates">📋 Szacunki miesięczne</button>
+        <button class="inline-tab" data-mode="transactions">📅 Transakcje + kalendarz</button>
+    </div>
+
+    <!-- Widok: szacunki -->
+    <div id="view-estimates">
+        <p class="muted">Wpisz orientacyjną kwotę miesięczną na każdą kategorię.</p>
+        <div id="estimates-fixed-section">
+            <h3 class="section-title">🏠 Stałe</h3>
+            <div id="estimates-fixed"></div>
+        </div>
+        <div id="estimates-variable-section" style="margin-top: var(--space-5);">
+            <h3 class="section-title">🛒 Zmienne</h3>
+            <div id="estimates-variable"></div>
+        </div>
+    </div>
+
+    <!-- Widok: transakcje + kalendarz -->
+    <div id="view-transactions" class="hidden">
+        <div class="calendar-layout">
+            <div class="calendar-side">
+                <div class="calendar-header">
+                    <div id="calendar-weekdays" class="calendar-weekdays"></div>
+                </div>
+                <div id="calendar-grid" class="calendar-grid"></div>
+                <div class="calendar-legend">
+                    <span class="calendar-legend-item"><span class="calendar-dot small"></span>1-3 transakcje</span>
+                    <span class="calendar-legend-item"><span class="calendar-dot"></span>4+ transakcji</span>
+                </div>
+            </div>
+
+            <div class="calendar-detail">
+                <h4 id="day-detail-title">Wybierz dzień</h4>
+                <form id="tx-form" class="tx-form">
+                    <input type="hidden" id="tx_date">
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="tx_amount">Kwota (zł)</label>
+                            <input type="number" id="tx_amount" step="0.01" min="0" placeholder="50">
+                        </div>
+                        <div class="field grow">
+                            <label for="tx_category">Kategoria</label>
+                            <select id="tx_category"></select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="tx_desc">Opis (opcjonalnie)</label>
+                        <input type="text" id="tx_desc" placeholder="np. obiad u Włocha">
+                    </div>
+                    <button type="submit" class="btn btn-primary">+ Dodaj transakcję</button>
+                </form>
+
+                <div id="day-transactions"></div>
+            </div>
+        </div>
+
+        <h3 class="section-title" style="margin-top: var(--space-6);">Wszystkie transakcje w miesiącu</h3>
+        <div id="all-transactions"></div>
+    </div>
+</section>
+
+<!-- Wykresy -->
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">📈 Wykresy</h2>
+    </div>
+    <div class="charts-grid">
+        <div>
+            <h4 class="chart-title">Gdzie idzie pensja</h4>
+            <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
+        </div>
+        <div>
+            <h4 class="chart-title">Wydatki per kategoria</h4>
+            <div class="chart-wrap"><canvas id="chart-bars"></canvas></div>
+        </div>
+    </div>
+</section>
+
+<!-- Snapshoty -->
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📷 Snapshoty miesięczne</h2>
+            <div class="card-subtitle">Zamknij miesiąc, by zachować jego stan. Linia pokazuje trend oszczędności.</div>
+        </div>
+        <button id="btn-snapshot" class="btn btn-primary">📷 Zamknij obecny miesiąc</button>
+    </div>
+
+    <div id="snapshots-empty" class="empty-state">
+        <div class="empty-icon">📷</div>
+        <div>Brak snapshotów. Zamknij swój pierwszy miesiąc.</div>
+    </div>
+
+    <div id="snapshots-content" class="hidden">
+        <div class="chart-wrap" style="height: 260px; margin-bottom: var(--space-4);">
+            <canvas id="chart-savings-line"></canvas>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Miesiąc</th><th>Dochód</th><th>Wydatki</th><th>Oszczędności</th><th>Δ vs poprzedni</th><th></th></tr>
+                </thead>
+                <tbody id="snapshots-body"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Cele - paski postępu -->
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">🎯 Postęp celów</h2>
+        <a href="{{ url_for('page_goals') }}" class="btn btn-soft">Zarządzaj celami</a>
+    </div>
+    <div id="goals-progress"></div>
+</section>
+
+<!-- Zarządzanie kategoriami -->
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">🏷️ Kategorie</h2>
+            <div class="card-subtitle">Dodawaj, edytuj, usuwaj. Limit jest ostrzegawczy (czerwony pasek po przekroczeniu).</div>
+        </div>
+        <button id="btn-add-category" class="btn btn-primary">+ Nowa kategoria</button>
+    </div>
+
+    <div id="categories-list"></div>
+
+    <!-- Modal-like form for category -->
+    <div id="category-form" class="hidden" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+        <h3 class="section-title" id="category-form-title">Nowa kategoria</h3>
+        <div class="field-row">
+            <div class="field" style="flex: 0 0 80px;">
+                <label for="cat_emoji">Emoji</label>
+                <input type="text" id="cat_emoji" maxlength="2" placeholder="🛒">
+            </div>
+            <div class="field grow">
+                <label for="cat_name">Nazwa</label>
+                <input type="text" id="cat_name" placeholder="np. Jedzenie">
+            </div>
+            <div class="field" style="flex: 0 0 100px;">
+                <label for="cat_color">Kolor</label>
+                <input type="color" id="cat_color" value="#4f46e5">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field grow">
+                <label for="cat_type">Typ</label>
+                <select id="cat_type">
+                    <option value="fixed">Stały (potrzeba)</option>
+                    <option value="variable">Zmienny (zachcianka)</option>
+                </select>
+            </div>
+            <div class="field grow">
+                <label for="cat_limit">Limit miesięczny (zł, 0 = brak)</label>
+                <input type="number" id="cat_limit" step="0.01" min="0" value="0">
+            </div>
+        </div>
+        <div class="actions">
+            <button id="btn-save-category" class="btn btn-primary">💾 Zapisz</button>
+            <button id="btn-cancel-category" class="btn btn-secondary">Anuluj</button>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

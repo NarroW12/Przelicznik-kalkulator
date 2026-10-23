@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Historia — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Historia obliczeń</h1>
+    <p>Twoje ostatnie wyliczenia + statystyki</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="card" id="stats-section">
+    <div class="card-header">
+        <h2 class="card-title">📊 Statystyki</h2>
+    </div>
+    <div class="stats-grid-large" id="stats-grid"></div>
+</section>
+
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">📜 Ostatnie 20 obliczeń</h2>
+        <button id="btn-clear-history" class="btn btn-danger hidden">Wyczyść historię</button>
+    </div>
+
+    <div id="history-empty" class="empty-state">
+        <div class="empty-icon">📜</div>
+        <div>Brak historii</div>
+    </div>
+
+    <div class="table-wrap">
+        <table id="history-table" class="data-table hidden">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Produkt</th>
+                    <th>Cena</th>
+                    <th>Czas</th>
+                    <th>Forma</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

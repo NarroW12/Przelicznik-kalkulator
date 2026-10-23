@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Kalkulator — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>Ile czasu na zakup?</h1>
+    <p>Sprawdź ile musisz pracować, by zarobić na to, czego chcesz</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">💰 Produkt</h2>
+    </div>
+
+    <div class="field-row">
+        <div class="field grow">
+            <label for="product_name">Nazwa <span class="hint" style="display:inline;margin:0">(opcjonalnie)</span></label>
+            <input type="text" id="product_name" placeholder="np. iPhone 15">
+        </div>
+        <div class="field">
+            <label for="price">Cena (zł)</label>
+            <input type="number" id="price" step="0.01" min="0" placeholder="1300">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="checkbox">
+            <input type="checkbox" id="apply_inflation">
+            <span>Uwzględnij inflację — produkt za <input type="number" id="inflation_years" value="1" min="0" max="20" step="1" style="width:60px;display:inline-block;padding:2px 6px;margin:0 4px;"> lat przy inflacji <input type="number" id="inflation_pct" value="5" min="0" max="50" step="0.1" style="width:60px;display:inline-block;padding:2px 6px;margin:0 4px;">%</span>
+        </label>
+    </div>
+
+    <div class="actions">
+        <button id="btn-calc" class="btn btn-primary btn-lg">Oblicz czas pracy</button>
+        <button id="btn-add-wishlist" class="btn btn-soft">+ Do listy zakupów</button>
+        <button id="btn-add-goal" class="btn btn-soft">+ Jako cel oszczędnościowy</button>
+        <button id="btn-share" class="btn btn-secondary">🔗 Udostępnij</button>
+    </div>
+
+    <div id="result" class="result hidden">
+        <div class="big-result" id="big-result"></div>
+        <div class="stats">
+            <div class="stat"><div class="stat-label">Godziny</div><div class="stat-value" id="total-hours"></div></div>
+            <div class="stat"><div class="stat-label">Dni</div><div class="stat-value" id="total-days"></div></div>
+            <div class="stat"><div class="stat-label">Tygodni</div><div class="stat-value" id="total-weeks"></div></div>
+            <div class="stat"><div class="stat-label">Miesięcy</div><div class="stat-value" id="total-months"></div></div>
+            <div class="stat"><div class="stat-label">Lat</div><div class="stat-value" id="total-years"></div></div>
+        </div>
+        <div class="percent-box" id="percent-box"></div>
+        <div class="meta" id="meta-box"></div>
+    </div>
+</section>
+{% endblock %}

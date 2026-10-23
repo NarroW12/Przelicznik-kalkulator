@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Info — Przelicznik{% endblock %}
+
+{% block header %}
+<header class="page-header">
+    <h1>O aplikacji</h1>
+    <p>Jak działają obliczenia i co możesz zrobić</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h2 class="section-title">Co potrafi Przelicznik</h2>
+    <ul style="line-height: 1.9; padding-left: 1.5rem;">
+        <li><strong>Kalkulator</strong> — cena produktu → czas pracy</li>
+        <li><strong>Tryb odwrotny</strong> — czas pracy → zarobki na rękę</li>
+        <li><strong>Lista zakupów</strong> — łączny czas pracy na wybrane produkty</li>
+        <li><strong>Cele oszczędnościowe</strong> — plan, postęp, prognozowana data</li>
+        <li><strong>Katalog typowych produktów</strong> — kontekst „ile pracujesz na obiad / kawę / czynsz”</li>
+        <li><strong>Historia + statystyki</strong> — ostatnie 20 obliczeń</li>
+        <li><strong>Wiele profili</strong> — porównuj UoP, B2B, drugą pracę</li>
+        <li><strong>Symulacja podwyżki</strong> — co się zmieni przy +/- X%</li>
+        <li><strong>Backup</strong> — eksport/import JSON-em</li>
+    </ul>
+</section>
+
+<section class="card">
+    <h2 class="section-title">Obsługiwane formy zatrudnienia</h2>
+    <ul style="line-height: 1.9; padding-left: 1.5rem;">
+        <li><strong>Umowa o pracę (UoP)</strong> — ZUS 13,71%, zdrowotna 9%, PIT 12% / 32%, KUP 250 zł, kwota wolna 300 zł/m-c</li>
+        <li><strong>Umowa zlecenie (UZ)</strong> — KUP 20%, opcja studencka (zero PIT/ZUS do 85 528 zł/rok)</li>
+        <li><strong>B2B liniowy 19%</strong> — zdrowotna 4,9% od dochodu (min ~315 zł)</li>
+        <li><strong>B2B ryczałt</strong> — 8,5% / 12% / 14% / 15%, zdrowotna w 3 progach</li>
+        <li><strong>B2B skala 12% / 32%</strong> — zdrowotna 9% od dochodu</li>
+    </ul>
+</section>
+
+<section class="card">
+    <h2 class="section-title">Zastrzeżenia</h2>
+    <p class="muted">
+        Obliczenia są <strong>uproszczone</strong>. Pomijają: ulgi 4+ / IP Box / rehabilitacyjną, drugie umowy,
+        dochody dodatkowe, koszty autorskie 50%, Mały ZUS Plus, PPK, Karta Dużej Rodziny i inne odliczenia.
+        Do celów księgowych konsultuj się z księgowym lub używaj kalkulatora z gov.pl.
+    </p>
+</section>
+{% endblock %}

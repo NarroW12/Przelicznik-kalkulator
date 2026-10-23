@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <title>{% block title %}Przelicznik — pieniądze na czas pracy{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // Apply theme before paint to avoid flash
+        (function() {
+            const stored = localStorage.getItem('przelicznik_theme');
+            const preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', preferred);
+        })();
+    </script>
+</head>
+<body data-page="{{ active }}">
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('page_calculator') }}" class="navbar-brand">
+                <span class="brand-icon">⏱</span>
+                <span>Przelicznik</span>
+            </a>
+            <button class="navbar-toggle" id="navbar-toggle" aria-label="Menu">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Zmień motyw">
+                <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                <svg class="icon-moon hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <ul class="navbar-menu" id="navbar-menu">
+                <li><a href="{{ url_for('page_calculator') }}" class="nav-link {% if active=='calculator' %}active{% endif %}">💰 Kalkulator</a></li>
+                <li><a href="{{ url_for('page_reverse') }}" class="nav-link {% if active=='reverse' %}active{% endif %}">⏱️ Odwrotny</a></li>
+                <li><a href="{{ url_for('page_wishlist') }}" class="nav-link {% if active=='wishlist' %}active{% endif %}">🛒 Lista</a></li>
+                <li><a href="{{ url_for('page_budget') }}" class="nav-link {% if active=='budget' %}active{% endif %}">💸 Budżet</a></li>
+                <li><a href="{{ url_for('page_goals') }}" class="nav-link {% if active=='goals' %}active{% endif %}">🎯 Cele</a></li>
+                <li><a href="{{ url_for('page_reference') }}" class="nav-link {% if active=='reference' %}active{% endif %}">📚 Katalog</a></li>
+                <li><a href="{{ url_for('page_history') }}" class="nav-link {% if active=='history' %}active{% endif %}">📜 Historia</a></li>
+                <li><a href="{{ url_for('page_settings') }}" class="nav-link {% if active=='settings' %}active{% endif %}">⚙️ Profil</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block header %}{% endblock %}
+
+        <div id="profile-banner" class="profile-banner hidden"></div>
+
+        {% block content %}{% endblock %}
+
+        <footer class="footer">
+            Wyliczenia podatkowe są uproszczone (ZUS / PIT 2025–2026, podstawowe KUP). Do oficjalnych celów użyj kalkulatora z gov.pl.
+        </footer>
+    </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    {% if needs_chartjs %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
